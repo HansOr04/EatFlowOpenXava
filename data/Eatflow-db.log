@@ -1,0 +1,7 @@
+/*C2*/SET SCHEMA PUBLIC
+DISCONNECT
+/*C3*/SET SCHEMA PUBLIC
+create table IMAGES (ID varchar(32) not null, GALLERY varchar(32), image varbinary(16777216), primary key (ID))
+create table OXDISCUSSIONCOMMENTS (id varchar(32) not null, "COMMENT" clob(16777216), discussionId varchar(32), time timestamp, userName varchar(30), primary key (id))
+create table TuPrimeraEntidad (id varchar(32) not null, descripcion varchar(50), fecha date, importe numeric(19,2), primary key (id))
+create index IDXbhlx4vunn24ym1tbrlgq8g30m on OXDISCUSSIONCOMMENTS (discussionId)
