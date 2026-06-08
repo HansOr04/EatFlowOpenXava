@@ -5,7 +5,9 @@ import java.time.*;
 import java.util.*;
 import javax.persistence.*;
 import org.openxava.annotations.*;
+import org.openxava.jpa.XPersistence;
 import com.grupo4.Eatflow.modelo.enums.OrderStatus;
+import com.grupo4.Eatflow.util.OrderDiscountCalculator;
 import lombok.*;
 
 @Entity
@@ -42,6 +44,20 @@ public class Order {
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     List<OrderItem> items = new ArrayList<>();
+
+    @Action("closeOrder")
+    public void closeOrder() throws Exception {
+        int totalItems = getItems().stream()
+                .mapToInt(OrderItem::getQuantity)
+                .sum();
+        double subtotal = getItems().stream()
+                .map(OrderItem::getSubtotal)
+                .mapToDouble(BigDecimal::doubleValue)
+                .sum();
+        double finalAmount = OrderDiscountCalculator.calculateFinalAmount(totalItems, subtotal);
+        this.totalAmount = BigDecimal.valueOf(finalAmount);
+        XPersistence.getManager().merge(this);
+    }
 
     @PrePersist
     void prePersist() {
