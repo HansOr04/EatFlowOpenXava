@@ -21,6 +21,26 @@
 			<artifactId>openxava</artifactId>
 			<version>${openxava.version}</version>
 		</dependency>
+
+		<!-- Dependencias de prueba: JUnit 5 + Mockito -->
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<version>5.10.2</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>5.10.0</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-junit-jupiter</artifactId>
+			<version>5.10.0</version>
+			<scope>test</scope>
+		</dependency>
 		
 		<!-- Funcionalidad de Chat IA (requiere Java 17) -->
 		<dependency>
@@ -195,7 +215,9 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>3.2.5</version>
 				<configuration>
-					<skipTests>true</skipTests>
+					<!-- -Djdk.attach.allowAttachSelf=true permite que Mockito 5 adjunte
+					     su agente inline en Java 17 sin restricciones de self-attach -->
+					<argLine>-Djdk.attach.allowAttachSelf=true</argLine>
 				</configuration>
 			</plugin>
 			
