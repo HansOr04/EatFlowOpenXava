@@ -28,6 +28,8 @@ public class Order {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     @Required
+    @ReadOnly
+    @Setter(AccessLevel.NONE)
     OrderStatus status = OrderStatus.PENDING;
 
     @Column(precision = 10, scale = 2)
@@ -56,7 +58,31 @@ public class Order {
                 .sum();
         double finalAmount = OrderDiscountCalculator.calculateFinalAmount(totalItems, subtotal);
         this.totalAmount = BigDecimal.valueOf(finalAmount);
+        this.status = OrderStatus.SERVED;
         XPersistence.getManager().merge(this);
+    }
+
+    public void setStatus(OrderStatus nuevoEstado) {
+        if (this.status != null && !esTransicionValida(this.status, nuevoEstado)) {
+            throw new IllegalStateException(
+                    "Transición de estado inválida: no se puede pasar de " + this.status + " a " + nuevoEstado);
+        }
+        this.status = nuevoEstado;
+    }
+
+    private boolean esTransicionValida(OrderStatus actual, OrderStatus nuevoEstado) {
+        switch (actual) {
+            case PENDING:
+                return nuevoEstado == OrderStatus.PENDING || nuevoEstado == OrderStatus.IN_PROGRESS
+                        || nuevoEstado == OrderStatus.SERVED || nuevoEstado == OrderStatus.CANCELLED;
+            case IN_PROGRESS:
+                return nuevoEstado == OrderStatus.IN_PROGRESS || nuevoEstado == OrderStatus.SERVED
+                        || nuevoEstado == OrderStatus.CANCELLED;
+            case SERVED:
+            case CANCELLED:
+            default:
+                return false;
+        }
     }
 
     @PrePersist

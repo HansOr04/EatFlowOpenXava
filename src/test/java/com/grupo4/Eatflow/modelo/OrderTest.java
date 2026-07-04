@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 
 import javax.persistence.EntityManager;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -167,16 +166,8 @@ class OrderTest {
             assertEquals(OrderStatus.SERVED, order.getStatus());
         }
 
-        /**
-         * PENDIENTE DE IMPLEMENTAR.
-         * closeOrder() actualmente SOLO calcula totalAmount y persiste.
-         * No cambia el campo status. Para que esta transicion sea valida,
-         * closeOrder() deberia hacer: this.status = OrderStatus.SERVED
-         * (o implementar una maquina de estados explicita).
-         */
-        @Disabled("closeOrder() no cambia status a SERVED: falta implementar maquina de estados en closeOrder()")
         @Test
-        @DisplayName("PENDING -> SERVED via closeOrder(): closeOrder() deberia cambiar el status a SERVED")
+        @DisplayName("PENDING -> SERVED via closeOrder(): closeOrder() cambia el status a SERVED")
         void testTransicion_PendingAServed_ViaCloseOrder_Valida() throws Exception {
             Order order = new Order();
             order.getItems().add(crearItem(1, 10.0));
@@ -187,40 +178,44 @@ class OrderTest {
 
                 order.closeOrder();
 
-                // FALLA: comportamiento actual devuelve PENDING porque closeOrder() no cambia el status
                 assertEquals(OrderStatus.SERVED, order.getStatus());
             }
         }
 
-        /**
-         * PENDIENTE DE IMPLEMENTAR.
-         * No existe validacion de transiciones. setStatus() acepta SERVED -> SERVED sin restriccion.
-         * Para implementar este guard seria necesario sobrescribir setStatus() o usar @PreUpdate.
-         */
-        @Disabled("No existe validacion de transiciones: setStatus() acepta SERVED->SERVED sin restriccion")
         @Test
-        @DisplayName("SERVED -> SERVED: transicion invalida, debe lanzar excepcion o no tener efecto")
+        @DisplayName("SERVED -> SERVED: transicion invalida, debe lanzar IllegalStateException")
         void testTransicion_ServedAServed_Invalida_DebeRechazarse() {
             Order order = new Order();
             order.setStatus(OrderStatus.SERVED);
 
-            // FALLA: no existe guard; setStatus acepta cualquier valor sin validar el estado previo
             assertThrows(IllegalStateException.class, () -> order.setStatus(OrderStatus.SERVED));
         }
 
-        /**
-         * PENDIENTE DE IMPLEMENTAR.
-         * No existe validacion de transiciones. setStatus() acepta CANCELLED -> CANCELLED sin restriccion.
-         */
-        @Disabled("No existe validacion de transiciones: setStatus() acepta CANCELLED->CANCELLED sin restriccion")
         @Test
-        @DisplayName("CANCELLED -> CANCELLED: transicion invalida, debe lanzar excepcion o no tener efecto")
+        @DisplayName("CANCELLED -> CANCELLED: transicion invalida, debe lanzar IllegalStateException")
         void testTransicion_CancelledACancelled_Invalida_DebeRechazarse() {
             Order order = new Order();
             order.setStatus(OrderStatus.CANCELLED);
 
-            // FALLA: no existe guard; setStatus acepta cualquier valor sin validar el estado previo
             assertThrows(IllegalStateException.class, () -> order.setStatus(OrderStatus.CANCELLED));
+        }
+
+        @Test
+        @DisplayName("IN_PROGRESS -> CANCELLED: transicion valida, el estado cambia correctamente")
+        void testTransicion_InProgressACancelled_Valida() {
+            Order order = new Order();
+            order.setStatus(OrderStatus.IN_PROGRESS);
+            order.setStatus(OrderStatus.CANCELLED);
+            assertEquals(OrderStatus.CANCELLED, order.getStatus());
+        }
+
+        @Test
+        @DisplayName("SERVED -> PENDING: transicion invalida, debe lanzar IllegalStateException")
+        void testTransicion_ServedAPending_Invalida_DebeRechazarse() {
+            Order order = new Order();
+            order.setStatus(OrderStatus.SERVED);
+
+            assertThrows(IllegalStateException.class, () -> order.setStatus(OrderStatus.PENDING));
         }
     }
 }
